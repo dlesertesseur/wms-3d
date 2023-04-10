@@ -1,0 +1,20 @@
+{
+  "name": "threejs",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "npx vite --host"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "konva": "^8.4.3",
+    "three": "^0.151.3"
+  },
+  "devDependencies": {
+    "vite": "^4.2.1"
+  }
+}
