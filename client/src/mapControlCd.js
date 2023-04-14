@@ -22,18 +22,18 @@ function init() {
     50,
     window.innerWidth / window.innerHeight,
     0.1,
-    5000
+    10000
   );
   //camera.position.set(400, 200, 0);
-  camera.position.set(0, 1000, 0);
+  camera.position.set(0, 4000, 0);
   camera.add
 
   // controls
   controls = new MapControls(camera, renderer.domElement);
   controls.screenSpacePanning = false;
   controls.minDistance = 100;
-  controls.maxDistance = 3000;
-  controls.maxPolarAngle = Math.PI / 2; 
+  controls.maxDistance = 10000;
+  controls.maxPolarAngle = 0//Math.PI / 2; 
 
   // lights
   const dirLight1 = new THREE.DirectionalLight(0xffffff);

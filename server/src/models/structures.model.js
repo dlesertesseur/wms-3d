@@ -8,6 +8,9 @@ const structuresSchema = mongoose.Schema({
   pos_y: { type: Number, required: true },
   pos_z: { type: Number, required: true },
   rot: { type: Number, required: true },
+  dim_x: { type: Number, required: true, default:0 },
+  dim_y: { type: Number, required: true, default:0 },
+  dim_z: { type: Number, required: true, default:0 },
   structure_code: { type: Number, required: true },
   parts: [],
 });

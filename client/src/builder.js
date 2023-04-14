@@ -1,12 +1,5 @@
 import * as THREE from "three";
-import {
-  BASE_LOD_LEVEL,
-  PIXEL_METER_RELATION,
-  PIXEL_METER_RELATION_CD,
-  SCALE,
-  SCALE_CD,
-  URL_SERVER,
-} from "./config";
+import { BASE_LOD_LEVEL, PIXEL_METER_RELATION, PIXEL_METER_RELATION_CD, SCALE, SCALE_CD, URL_SERVER } from "./config";
 
 const positionRegex = /^[A-Z]\d{2}_\d{2}[A-Z]_\d{2}$/;
 const columnsRegex = /^(FRONT|BACK) COLUMN - \d+$/;
@@ -14,7 +7,7 @@ const columnsRegex = /^(FRONT|BACK) COLUMN - \d+$/;
 const matBase = new THREE.MeshLambertMaterial({ color: 0xced4da });
 const matShelf = new THREE.MeshLambertMaterial({ color: 0x0000ee });
 const matStructure = new THREE.MeshLambertMaterial({ color: 0x868e96 });
-const material = new THREE.MeshLambertMaterial({ color: 0x00ff00 });
+const material = new THREE.MeshLambertMaterial({ color: 0xd5d5d5 });
 
 const materials = {
   ESTANTE: matShelf,
@@ -85,23 +78,59 @@ function processPartName(partPrefix, excludePartsPredix) {
   return ret;
 }
 
-function createStructurePart(part, mat) {
+function createStructurePart(part, view3d=false) {
+  let mat = null;
+  switch (part.type) {
+    case "BASE":
+      mat = matBase;
+      break;
+    case "STRUCTURE":
+      mat = matShelf;
+      break;
+    case "OTHER":
+      mat = material;
+      break;
+  }
+
+  const dimY = view3d ? (part.dim_y * SCALE_CD) : 0.1;
+  const posY = view3d ? (part.pos_y * SCALE_CD) : 0;
+
   const geometry = new THREE.BoxGeometry(
-    part.dim_x * SCALE_CD,
-    part.dim_y * SCALE_CD,
-    part.dim_z * SCALE_CD
-  );
+    part.dim_x * SCALE_CD, 
+    dimY, 
+    part.dim_z * SCALE_CD);
 
   const grPart = new THREE.Mesh(geometry, mat);
 
   grPart.name = part.name;
   grPart.position.x = part.pos_x * SCALE_CD;
-  grPart.position.y = part.pos_y * SCALE_CD;
+  grPart.position.y = posY;
   grPart.position.z = part.pos_z * SCALE_CD;
   grPart.updateMatrix();
   grPart.matrixAutoUpdate = false;
 
   return grPart;
+}
+
+function createStructure(structure, view3d=false) {
+  let mat = material;
+  const dimY = view3d ? (structure.dim_y * SCALE_CD) : 0.1;
+  const posY = view3d ? ((structure.dim_y * SCALE_CD) / 2.0) : 0;
+
+  const geometry = new THREE.BoxGeometry(
+    structure.dim_x * SCALE_CD,
+    dimY,
+    structure.dim_z * SCALE_CD
+  );
+
+  const grStructure = new THREE.Mesh(geometry, mat);
+
+  grStructure.name = structure.name;
+  grStructure.position.y = posY;
+  grStructure.updateMatrix();
+  grStructure.matrixAutoUpdate = false;
+
+  return grStructure;
 }
 
 function createMesh(partPrefix, part) {
@@ -110,11 +139,7 @@ function createMesh(partPrefix, part) {
     console.log(part.name);
   }
 
-  const geometry = new THREE.BoxGeometry(
-    part.dim_x * SCALE,
-    part.dim_y * SCALE,
-    part.dim_z * SCALE
-  );
+  const geometry = new THREE.BoxGeometry(part.dim_x * SCALE, part.dim_y * SCALE, part.dim_z * SCALE);
 
   const grPart = new THREE.Mesh(geometry, mat ? mat : material);
 
@@ -174,7 +199,6 @@ function asignaTipo(structure) {
 function buildCDStructureLOD(scene, structure, pixelMeterRelation = 1) {
   const parts = structure.parts;
   const grStructure = new THREE.Group();
-  const grBase = new THREE.Group();
   const grLow = new THREE.Group();
   const grHigh = new THREE.Group();
 
@@ -184,18 +208,17 @@ function buildCDStructureLOD(scene, structure, pixelMeterRelation = 1) {
     const part = parts[i];
     switch (part.type) {
       case "BASE":
-        grBase.add(createStructurePart(part, matShelf));
       case "STRUCTURE":
-        grLow.add(createStructurePart(part, matStructure));
+        grLow.add(createStructurePart(part));
       case "OTHER":
-        grHigh.add(createStructurePart(part, material));
+        grHigh.add(createStructurePart(part));
     }
   }
 
   const lod = new THREE.LOD();
   lod.addLevel(grHigh, 100);
   lod.addLevel(grLow, 500);
-  lod.addLevel(grBase, 2000);
+  lod.addLevel(createStructure(structure), 2000);
 
   grStructure.add(lod);
   grStructure.position.x = structure.pos_x * pixelMeterRelation;
@@ -225,6 +248,7 @@ function buildStructureLOD(scene, structure) {
       case "BACK":
       case "FRONT":
       case "RIGHT":
+      case "LEFT":
         grLow.add(createMesh(partPrefix, part));
       case "ESTANTE":
       case "INTERNAL":
@@ -339,11 +363,4 @@ function loadObject(objPath, scene) {
   );
 }
 
-export {
-  createWorld,
-  createSimpleWorld,
-  drawCenter,
-  loadObject,
-  createGrid,
-  createCD,
-};
+export { createWorld, createSimpleWorld, drawCenter, loadObject, createGrid, createCD };

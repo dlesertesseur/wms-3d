@@ -116,5 +116,43 @@ async function insertPartsOfStructureFromJson() {
   logTitle("End process -> insertPartsOfStructureFromJson");
 }
 
+async function updateStructuresFromJson() {
+  logTitle("Start process -> updateStructuresFromJson");
+
+  const stcMap = new Map();
+  const dao = new StructuresDao();
+  const structuresFromJson = await getObjects("./data/cd_actors.json");
+  logTitle("Read structure parts from Json " + structuresFromJson.length + " rows");
+
+  structuresFromJson.forEach(stc => {
+    stcMap.set(stc.code.toString(), stc);
+  });
+
+  const structures = await dao.getAll()
+  logTitle("Get all structures from mongo. rows: " + structures.length);
+
+  for (let i = 0; i < structures.length; i++) {
+    const structure = structures[i];
+    const stcFromJson = stcMap.get(structure.code);
+    if(stcFromJson){
+      const newStructure = {...structure};
+      newStructure.dim_x = stcFromJson.dim_x,
+      newStructure.dim_y = stcFromJson.dim_y,
+      newStructure.dim_z = stcFromJson.dim_z,
+      delete newStructure._id;
+  
+      await dao.update(structure._id, newStructure)
+      log(`actor ${structure.name} updated`);
+    }else{
+      log(`actor ${structure.name} NOT FOUND`);
+    }
+  }
+
+  logTitle("End process -> updateStructuresFromJson");
+}
+
+
 //insertStructuresFromJson().catch((err) => console.log(err));
 //insertPartsOfStructureFromJson().catch((err) => console.log(err));
+//updateStructuresFromJson().catch((err) => console.log(err));
+
