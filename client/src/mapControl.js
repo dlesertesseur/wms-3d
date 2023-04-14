@@ -1,14 +1,13 @@
 import * as THREE from "three";
 import { MapControls } from "three/addons/controls/MapControls.js";
-import { createSimpleWorld, createWorld, drawCenter } from "./builder";
+import { createGrid, createSimpleWorld, createWorld, drawCenter } from "./builder";
 
 let camera, controls, scene, renderer;
 
 init();
-//createWorld(scene);
-//createSimpleWorld(scene);
 drawCenter(scene);
-createWorld(scene);
+createWorld(scene, true);
+//createGrid(scene);
 animate();
 
 function init() {
@@ -21,21 +20,23 @@ function init() {
   document.body.appendChild(renderer.domElement);
 
   camera = new THREE.PerspectiveCamera(
-    60,
+    50,
     window.innerWidth / window.innerHeight,
-    1,
-    2000
+    0.1,
+    5000
   );
-  camera.position.set(400, 200, 0);
+  //camera.position.set(400, 200, 0);
+  camera.position.set(0, 1000, 0);
+  camera.add
 
   // controls
   controls = new MapControls(camera, renderer.domElement);
-  controls.enableDamping = false;
-  controls.dampingFactor = 0.05;
+  // controls.enableDamping = false;
+  // controls.dampingFactor = 0.05;
   controls.screenSpacePanning = false;
   controls.minDistance = 100;
-  controls.maxDistance = 1000;
-  controls.maxPolarAngle = Math.PI / 2;
+  controls.maxDistance = 3000;
+  controls.maxPolarAngle = Math.PI / 2; 
 
   // lights
   const dirLight1 = new THREE.DirectionalLight(0xffffff);

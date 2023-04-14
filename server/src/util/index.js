@@ -1,5 +1,6 @@
 import fs from "fs";
 import ActorsDao from "../persistence/actors.dao.js";
+import StructuresDao from "../persistence/structures.dao.js";
 
 const getObjects = async (path) => {
   let arr = [];
@@ -20,7 +21,7 @@ async function insertActorsFromJson() {
   const actorsDao = new ActorsDao();
 
   logTitle("get actors from file");
-  const actors = await getObjects("./data/actors.json");
+  const actors = await getObjects("./data/cd_actors.json");
 
   logTitle("insert actors to DDBB " + actors.length + " rows");
   for (let i = 0; i < actors.length; i++) {
@@ -72,5 +73,48 @@ async function insertPartsFromJson() {
   logTitle("End process -> insertPartsFromJson");
 }
 
-//insertActorsFromJson().catch((err) => console.log(err));
-insertPartsFromJson().catch((err) => console.log(err));
+async function insertStructuresFromJson() {
+  const dao = new StructuresDao();
+
+  logTitle("get structures from file");
+  const structures = await getObjects("./data/cd_actors.json");
+
+  logTitle("insert structures to DDBB " + structures.length + " rows");
+  for (let i = 0; i < structures.length; i++) {
+    const ret = await dao.insert(structures[i]);
+    log(`row: ${i} actor: ${ret.name}`);
+  }
+  logTitle("Fin");
+}
+
+
+async function insertPartsOfStructureFromJson() {
+  logTitle("Start process -> insertPartsOfStructureFromJson");
+
+  const dao = new StructuresDao();
+  const parts = await getObjects("./data/cd_structures.json");
+  logTitle("Read structure parts from Json " + parts.length + " rows");
+
+  const groups = groupParts(parts); 
+  logTitle("Parts group by structure_code. groups: " + Object.keys(groups).length);
+
+  const structures = await dao.getAll()
+  logTitle("Get all structures from mongo. rows: " + structures.length);
+
+  for (let i = 0; i < structures.length; i++) {
+    const structure = structures[i];
+    const parts = groups[structure.structure_code.toString()];
+
+    const newStructure = {...structure};
+    newStructure.parts = parts;
+    delete newStructure._id;
+
+    await dao.update(structure._id, newStructure)
+    log(`actor ${structure.name} updated parts: ${newStructure.parts.length}`);
+  }
+
+  logTitle("End process -> insertPartsOfStructureFromJson");
+}
+
+//insertStructuresFromJson().catch((err) => console.log(err));
+//insertPartsOfStructureFromJson().catch((err) => console.log(err));
